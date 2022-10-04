@@ -1,19 +1,26 @@
 const sauce = require("../models/stuff");
 const fs = require("fs");
 
+//Creation du middlewale pour la création d'un nouvel objet via une requete POST
+
 exports.createsauce = (req, res, next) => {
+  // Recuperation de l'objet, parsé et suppresion de l'id automatiquement généré par MONGODB et de L'userid pour le remplacer par le token d'identification
   const sauceObject = JSON.parse(req.body.sauce);
   delete sauceObject._id;
   delete sauceObject._userId;
   const Sauce = new sauce({
     ...sauceObject,
     userId: req.auth.userId,
+    // Ajout de l'url d'image protocol http suivi du port en localhost du dossier dans lequel stocker l'image et enfin le nom du fichier
     imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
   });
+  // Sauvegarde de la nouvelle sauce dans l'api
   Sauce.save()
     .then(() => res.status(201).json({ message: "Nouvelle sauce enregister" }))
     .catch((error) => res.status(400).json({ error }));
 };
+
+// Creation d'un middleware pour la requête get afin de recuperer tout les objet présent dans l'api
 
 exports.getAllSauce = (req, res, next) => {
   sauce
@@ -22,6 +29,8 @@ exports.getAllSauce = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+//Creation d'un middleware pour la requete get afin de recuperer un seul objet de l'api identifié par son id
+
 exports.getSauces = (req, res, next) => {
   sauce
     .findOne({ _id: req.params.id })
@@ -29,6 +38,9 @@ exports.getSauces = (req, res, next) => {
     .then((sauces) => res.status(200).json(sauces))
     .catch((error) => res.status(400).json({ error }));
 };
+
+// Creation d'un middleware pour la requete put afin de pouvoir modifier un objet seulement si l'utilisateur qui souhaite le modifer et également celui
+// qui l'a créé.
 
 exports.updateSauce = (req, res, next) => {
   const sauceObject = req.file
@@ -54,6 +66,9 @@ exports.updateSauce = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// Creation d'un middleware pour permettre de supprimer un objet de l'api en verifiant comme pour le requête put si l'utilisateur qui souhaite
+// supprimer l'objet est bien celui qui la précedemment créé.
+
 exports.deleteSauce = (req, res, next) => {
   sauce
     .findOne({ _id: req.params.id })
@@ -72,6 +87,9 @@ exports.deleteSauce = (req, res, next) => {
     })
     .catch((error) => res.status(500).json({ error }));
 };
+
+// Creation d'un middleware pour pouvoir ajouter et retirer un like et/ou un dislike sur chaque objet, si l'utilisateur like ou dislike un objet,
+// son userId est enregister dans le tableau correspondant, de façon a ce qu'il ne puisse liker ou diliker qu'une seule fois par produits
 
 exports.addLikedDislike = (req, res, next) => {
   sauce

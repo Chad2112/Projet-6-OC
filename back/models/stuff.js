@@ -1,5 +1,6 @@
+// Importation de mongoose pour pouvoir crée un schema avec des champs requis ou non
 const mongoose = require("mongoose");
-
+// Definition du schema pour les requête POST vers l'API
 const sauceSchema = mongoose.Schema({
   userId: { type: String, required: true },
   name: { type: String, required: true },
