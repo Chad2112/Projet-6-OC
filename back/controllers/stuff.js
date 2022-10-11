@@ -1,5 +1,7 @@
 const sauce = require("../models/stuff");
+// fs est utilisée pour supprimer un fichier ou un lien du système de fichiers
 const fs = require("fs");
+const mongoose = require("mongoose");
 
 //Creation du middlewale pour la création d'un nouvel objet via une requete POST
 
@@ -14,6 +16,7 @@ exports.createsauce = (req, res, next) => {
     // Ajout de l'url d'image protocol http suivi du port en localhost du dossier dans lequel stocker l'image et enfin le nom du fichier
     imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
   });
+  console.log(Sauce);
   // Sauvegarde de la nouvelle sauce dans l'api
   Sauce.save()
     .then(() => res.status(201).json({ message: "Nouvelle sauce enregister" }))
@@ -70,22 +73,30 @@ exports.updateSauce = (req, res, next) => {
 // supprimer l'objet est bien celui qui la précedemment créé.
 
 exports.deleteSauce = (req, res, next) => {
-  sauce
-    .findOne({ _id: req.params.id })
-    .then((sauces) => {
-      if (sauces.userId != req.auth.userId) {
-        res.status(401).json({ message: "Non-autorisé" });
-      } else {
-        const filename = sauces.imageUrl.split("/images/")[1];
-        fs.unlink(`images/${filename}`, () => {
-          sauce
-            .deleteOne({ _id: req.params.id })
-            .then(() => res.status(200).json({ message: "Objet supprimer" }))
-            .catch((error) => res.status(500).json({ error }));
-        });
-      }
-    })
-    .catch((error) => res.status(500).json({ error }));
+  if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    // Mongoose.Types.ObjectId pour gerer  la supression des sauces qui
+    // ne sont pas dans la DB
+    sauce
+      .findOne({
+        _id: req.params.id,
+      })
+      .then((sauce) => {
+        try {
+          const path = sauce.imageUrl.split("/images/")[1];
+          fs.unlink(`images/${path}`, (err) => {
+            sauce
+              .deleteOne({ _id: req.params.id })
+              .then(() => res.status(200).json({ message: "Sauce suprimer avec success" }))
+              .catch((error) => res.status(400).json({ error: error }));
+          });
+        } catch (TypeError) {
+          res.status(404).json({ error: "Cette sauce n'existe pas !!!" });
+        }
+      });
+  } else {
+    // Si l'objet n'existe pas on renvoi une erreur
+    rejects({ sucess: "false", data: "Please provide correct id" });
+  }
 };
 
 // Creation d'un middleware pour pouvoir ajouter et retirer un like et/ou un dislike sur chaque objet, si l'utilisateur like ou dislike un objet,

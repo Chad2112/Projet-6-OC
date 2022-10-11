@@ -5,6 +5,8 @@ const User = require("../models/user");
 // Importation du packake jsonwebtoken pour attribuer un token par utilisateur
 const jwt = require("jsonwebtoken");
 
+const mongoMask = require("mongo-mask");
+
 // Creation du middleware pour l'inscription de l'utilisateur
 exports.signup = (req, res, next) => {
   bcrypt

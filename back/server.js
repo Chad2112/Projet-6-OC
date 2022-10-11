@@ -2,14 +2,48 @@
 const http = require("http");
 //Importer l'application app.js
 const app = require("./app");
-//Importer le package pour utiliser les variables d'environnement
-const dotenv = require("dotenv");
-const result = dotenv.config();
+require("dotenv").config({ path: "./config/.env" });
+const normalizePort = (val) => {
+  const port = parseInt(val, 10);
 
-//Parametrage du port avec la methode set
-app.set("port", process.env.PORT);
+  if (isNaN(port)) {
+    return val;
+  }
+  if (port >= 0) {
+    return port;
+  }
+  return false;
+};
+const port = normalizePort(process.env.PORT);
+app.set("port", port);
 
-// La methode create server prend en argument la fonction qui sera appelé a chaque requête
+const errorHandler = (error) => {
+  if (error.syscall !== "listen") {
+    throw error;
+  }
+  const address = server.address();
+  const bind = typeof address === "string" ? "pipe " + address : "port: " + port;
+  switch (error.code) {
+    case "EACCES":
+      console.error(bind + " requires elevated privileges.");
+      process.exit(1);
+      break;
+    case "EADDRINUSE":
+      console.error(bind + " is already in use.");
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+};
+
 const server = http.createServer(app);
-//Le server ecoute les requête sur le port defini dans la variable d'environement ('env')
-server.listen(process.env.PORT);
+
+server.on("error", errorHandler);
+server.on("listening", () => {
+  const address = server.address();
+  const bind = typeof address === "string" ? "pipe " + address : "port " + port;
+  console.log("Listening on " + bind);
+});
+
+server.listen(port);
