@@ -50,11 +50,4 @@ app.use("/api/sauces/", cors(), saucesRoutes);
 // Ajout du chemin statique pour fournir les images
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-app.use(function (err, req, res, next) {
-  console.log(req.body);
-  console.log("This is the invalid field ->", err.field);
-
-  next(err);
-});
-
 module.exports = app;

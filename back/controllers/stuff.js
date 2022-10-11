@@ -7,26 +7,51 @@ const { rejects } = require("assert");
 
 exports.createsauce = (req, res, next) => {
   // Recuperation de l'objet, parsé et suppresion de l'id automatiquement généré par MONGODB et de L'userid pour le remplacer par le token d'identification
-  const sauceObject = JSON.parse(req.body.sauce);
-  console.log(sauceObject);
-  delete sauceObject._userId;
-  delete sauceObject._id;
-  const sauce = new Sauce({
-    ...sauceObject,
-    userId: req.auth.userId,
-    // Ajout de l'url d'image protocol http suivi du port en localhost du dossier dans lequel stocker l'image et enfin le nom du fichier
-    imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
-    likes: req.body.likes,
-    dislikes: req.body.dislikes,
-    usersLiked: req.body.usersLiked,
-    usersDisliked: req.body.usersDisliked,
-  });
-  console.log(sauce);
-  // Sauvegarde de la nouvelle sauce dans l'api
-  sauce
-    .save()
-    .then(() => res.status(201).json({ message: "Nouvelle sauce enregister avec success" }))
-    .catch((error) => res.status(400).json({ error }));
+
+  // delete sauceObject._id;
+  // delete sauceObject._userId;
+  console.log(req.body.sauce);
+  if (req.body.sauce == undefined) {
+    const sauce = new Sauce({
+      userId: req.body.userId,
+      name: req.body.name,
+      manufacturer: req.body.manufacturer,
+      description: req.body.description,
+      // Ajout de l'url d'image protocol http suivi du port en localhost du dossier dans lequel stocker l'image et enfin le nom du fichier
+      imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+      mainPepper: req.body.mainPepper,
+      heat: req.body.heat,
+      likes: req.body.likes,
+      dislikes: req.body.dislikes,
+      usersLiked: req.body.usersLiked,
+      usersDisliked: req.body.usersDisliked,
+    });
+    console.log(sauce);
+
+    sauce
+      .save()
+      .then(() => res.status(201).json({ message: "Nouvelle sauce enregister avec success" }))
+      .catch((error) => res.status(400).json({ error }));
+  } else {
+    const sauceObject = JSON.parse(req.body.sauce);
+    const sauce = new Sauce({
+      ...sauceObject,
+      userId: req.auth.userId,
+      // Ajout de l'url d'image protocol http suivi du port en localhost du dossier dans lequel stocker l'image et enfin le nom du fichier
+      imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+      likes: req.body.likes,
+      dislikes: req.body.dislikes,
+      usersLiked: req.body.usersLiked,
+      usersDisliked: req.body.usersDisliked,
+    });
+
+    sauce
+      .save()
+      .then(() => res.status(201).json({ message: "Nouvelle sauce enregister avec success" }))
+      .catch((error) => res.status(400).json({ error }));
+
+    // Sauvegarde de la nouvelle sauce dans l'api
+  }
 };
 
 // Creation d'un middleware pour la requête get afin de recuperer tout les objet présent dans l'api
