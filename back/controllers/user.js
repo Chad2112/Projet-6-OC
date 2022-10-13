@@ -9,9 +9,11 @@ const mongoMask = require("mongo-mask");
 
 // Creation du middleware pour l'inscription de l'utilisateur
 exports.signup = (req, res, next) => {
+  //Cryptage du password grâce a Bcrypt
   bcrypt
     .hash(req.body.password, 10)
     .then((hash) => {
+      // Le nouvelle utilisateur sera enregistrer dans la base de donnée avec son email et son mot de passe hashé
       const user = new User({
         email: req.body.email,
         password: hash,
@@ -37,7 +39,7 @@ exports.login = (req, res, next) => {
         bcrypt
           .compare(req.body.password, user.password)
           .then((valid) => {
-            // Si le mot de passe de correspond pas une erreur est renvoyer
+            // Si le mot de passe ne correspond pas une erreur est renvoyer
             if (!valid) {
               res.status(401).json({ message: `L'utilisateur et/ou le mot de passe est incorrect` });
             } else {

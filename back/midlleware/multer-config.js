@@ -1,26 +1,30 @@
-// Importation du package Multer pour le transfert de fichier via les requête vers l'API
 const multer = require("multer");
-
-const MIME_TYPES = {
-  "image/jpg": "jpg",
-  "image/jpeg": "jpg",
-  "image/png": "png",
-};
-
-// Ajout d'un middleware avec un fonction callback pour enregister les images dans le dossier correspondant
-
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, "images");
+  destination: function (req, file, cb) {
+    cb(null, "./images/");
   },
-  // Création du nom du fichier dans cet ordre: Nom du fichier original suivi d'un underscore, de la date et enfin l'extension ex: jpg
-  filename: (req, file, callback) => {
-    const name = file.originalname.split(" ").join("_");
-    const extension = MIME_TYPES[file.mimetype];
-    callback(null, name + Date.now() + "." + extension);
+  //Definition du nom du fichier en y ajoutant une date (new Date.toIsoString) et le nom du fichier de base
+  //file.originalname
+  filename: function (req, file, cb) {
+    cb(null, new Date().toISOString().replace(/:/g, "-") + file.originalname);
   },
 });
 
-// Export du multer qui pourra etre utilisé pour une seule images par requête post
+// Creation d'un fonction qui accepte uniquement les images au format jpg/jpeg/png, sinon on renvoi une
+// erreur format non pris en charge
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png" || file.mimetype === "image/jpg") {
+    cb(null, true);
+  } else {
+    cb(null, false);
+    return cb(new Error("Format non pris en charge !!!"));
+  }
+};
 
-module.exports = multer({ storage: storage }).single("image");
+//Storage = stockage du fichier en mémoire
+// Limits, fileSize = Limite la taille du fichier en octets
+//Filefilter = filtre les fichier accépté ou non
+const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 5 }, fileFilter: fileFilter });
+
+//Export de la constante upload pour l'utilisé dans l'app.js
+module.exports = upload;
